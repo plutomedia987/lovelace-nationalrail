@@ -1,6 +1,8 @@
-const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
-const css = LitElement.prototype.css;
+import {
+  LitElement,
+  html,
+  css,
+} from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
 const locale = {
   "en": {
@@ -238,7 +240,7 @@ class NationalRailCard extends LitElement {
 
   createRow(arr_nDep, rowInfo) {
 
-    console.log(rowInfo)
+    // console.log(rowInfo)
 
     let plat = html`
       <tr>
@@ -297,8 +299,8 @@ class NationalRailCard extends LitElement {
     const scheduled = new Date(Date.parse(scheduled_in));
     const expected = new Date(Date.parse(expected_in));
 
-    console.log(scheduled)
-    console.log(expected)
+    // console.log(scheduled)
+    // console.log(expected)
 
     if (isNaN(scheduled)) {
       if (scheduled_in == "cancelled") {
