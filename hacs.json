@@ -1,0 +1,6 @@
+{
+    "name": "National Rail Card",
+    "render_readme": true,
+    "country": "GB",
+    "filename":"homeassistant_nationalrail.js"
+  }
