@@ -143,6 +143,7 @@ class NationalRailCard extends LitElement {
 
       .nr-label{
         font-weight: bold;
+        white-space: nowrap;
       }
 
       .nr-header-direction{
@@ -150,6 +151,15 @@ class NationalRailCard extends LitElement {
         vertical-align: middle;
         font-style: italic;
         color: var(--ha-card-header-color,var(--secondary-text-color))
+      }
+
+      .nr-train-board table{
+        cursor: pointer;
+        width: 100%
+      }
+
+      .nr-orig{
+        width: 99%
       }
 
       .nr-cancelled-colour{
@@ -169,6 +179,39 @@ class NationalRailCard extends LitElement {
 
       .nr-override-time{
         text-decoration: line-through;
+      }
+
+      .nr-schedule{
+        display: none; // block
+      }
+
+      .nr-train-schedule{
+        display: none; // flex
+        justify-content: center;
+      }
+
+      .nr-train-bar{
+        width: 5%;
+        border: 1px solid var(--primary-text-color);
+        border-radius: 50vh
+      }
+
+      .nr-train-stations{
+        flex-grow: 0.8
+      }
+
+      .nr-train-station-name{
+        padding: 0.75em;
+      }
+
+      .nr-train-bar-progress{
+        background-color: green;
+        border-radius: 50vh
+      }
+
+      .nr-train-bar-progress-cancelled{
+        background-color: red;
+        border-radius: 50vh
       }
     `;
   }
@@ -194,7 +237,12 @@ class NationalRailCard extends LitElement {
               ${this.stateAttr.dests[this._config.station].displayName}
             </h1>
             <div class="card-content">
-              ${this.renderRows()}
+              <div class="nr-train-board">
+                ${this.renderRows()}
+              </div>
+              <div class="nr-schedule">
+                ${this.renderSchedule()}
+              </div>
             </div>
           </ha-card>
         `;
@@ -221,6 +269,79 @@ class NationalRailCard extends LitElement {
 
   }
 
+  _handleRowClick(e) {
+    let component = e.composedPath()
+
+  }
+
+  renderSchedule() {
+
+    // console.log(this.hass)
+
+    let rows = [];
+    let trains = this.stateAttr.dests[this._config.station][(this._config.arr_nDep ? "Arrival" : "Departure")].trains
+
+    // console.log(trains)
+
+    for (let i = 0; i < ((trains.length > this._config.numRows)?this._config.numRows:trains.length); i++){
+      rows.push(this.renderScheduleRows(trains[i],i));
+    }
+
+    return html`${rows}`;
+  }
+
+  renderScheduleRows(train, i) {
+
+    let trainStation = [];
+
+    // console.log(train);
+
+    let position = -0.5;
+    let arrCount = 0;
+    let positionCancelled = -0.5
+
+    train.callingPoints.forEach(x => {
+
+      if (!!x.at) {
+        position = arrCount;
+      }
+
+      if (!!x.et && x.et == "Cancelled") {
+        positionCancelled = arrCount;
+      }
+
+      arrCount++;
+
+      trainStation.push(html`
+        <div class="nr-train-station-name">
+          <span class="${(!!x.et && x.et == "Cancelled") ? "nr-override-time" : ""}">
+            ${x.locationName}
+          </span>
+          &nbsp;
+          <span class="nr-cancelled-colour">
+            ${(!!x.et && x.et == "Cancelled") ? this._ll(x.et) : ""}
+          </span>
+        </div>
+      `);
+    });
+
+    let trainProgress = (100 / trainStation.length) * ((position != 0) ? position + 1 : 0.5);
+    let trainProgressCancelled = (100 / trainStation.length) * ((positionCancelled != 0) ? positionCancelled + 1 : 0.5);
+
+    return html`
+      <div class="nr-train-schedule nr-train-schedule-${i}">
+        <!-- <ha-icon icon="mdi:close"></ha-icon> -->
+        <div class="nr-train-bar">
+          <!--<div class="nr-train-bar-progress-cancelled" style="height:${trainProgressCancelled}%"></div>-->
+          <div class="nr-train-bar-progress" style="height:${trainProgress}%"></div>
+        </div>
+        <div class="nr-train-stations">
+          ${trainStation}
+        </div>
+      </div>
+    `;
+  }
+
   renderRows() {
 
     let rows = [];
@@ -228,9 +349,9 @@ class NationalRailCard extends LitElement {
 
     // console.log(trains)
 
-    for (let i = 0; i < this._config.numRows; i++){
+    for (let i = 0; i < ((trains.length > this._config.numRows)?this._config.numRows:trains.length); i++){
 
-      rows.push(this.createRow(this._config.arr_nDep,trains[i]));
+      rows.push(this.createRow(this._config.arr_nDep,trains[i],i));
       rows.push(html`<hr />`);
     }
     rows.pop();
@@ -238,14 +359,14 @@ class NationalRailCard extends LitElement {
     return html`${rows}`;
   }
 
-  createRow(arr_nDep, rowInfo) {
+  createRow(arr_nDep, rowInfo, i) {
 
     // console.log(rowInfo)
 
     let plat = html`
       <tr>
         <td class="nr-label">${this._ll("platform")}: <td>
-        <td class="nr-plat">${rowInfo.platform}<td>
+        <td class="nr-plat">${(rowInfo.platform?rowInfo.platform:"N/A")}<td>
       </tr>
     `;
     let platBefore = html``;
@@ -262,7 +383,7 @@ class NationalRailCard extends LitElement {
       arrivalTime = this.getTime(rowInfo.otherEnd.st, rowInfo.otherEnd.et);
     }
     return html`
-      <table>
+      <table data-rowId="${i}" @click="${this._handleRowClick}">
         <tr>
           <td class="nr-label">${this._ll("origin")}: <td>
           <td class="nr-orig">${rowInfo.origin}<td>
