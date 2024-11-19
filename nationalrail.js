@@ -153,11 +153,6 @@ class NationalRailCard extends LitElement {
         color: var(--ha-card-header-color,var(--secondary-text-color))
       }
 
-      .nr-train-board table{
-        cursor: pointer;
-        width: 100%
-      }
-
       .nr-orig{
         width: 99%
       }
@@ -182,11 +177,11 @@ class NationalRailCard extends LitElement {
       }
 
       .nr-schedule{
-        display: none; // block
+        display: block;
       }
 
       .nr-train-schedule{
-        display: none; // flex
+        display: flex;
         justify-content: center;
       }
 
@@ -213,6 +208,39 @@ class NationalRailCard extends LitElement {
         background-color: red;
         border-radius: 50vh
       }
+
+      .nr-table {
+        display: table;
+        cursor: pointer;
+      }
+
+      .nr-table-row{
+        display: table-row;
+      }
+
+      .nr-table-cell{
+        display: table-cell;
+        padding-left: 0.2vw;
+        padding-right: 0.2vw;
+      }
+
+      .hide{
+        display: none;
+      }
+
+      .nr-close-btn{
+        text-align: center;
+        border: 1px solid var(--primary-text-color);
+        padding: 0.5em;
+        margin: 0.5em;
+        border-radius: 50vh;
+        cursor: pointer;
+      }
+
+      .nr-close-btn:hover{
+        color: var(--secondary-text-color);
+        border-color: var(--secondary-text-color);
+      }
     `;
   }
 
@@ -221,6 +249,7 @@ class NationalRailCard extends LitElement {
       return html``;
     }
 
+    // console.log(this.hass)
 
     if (Object.keys(this.hass.states).includes(this._config.entity)) {
       this.entityObj = this.hass.states[this._config.entity];
@@ -240,7 +269,8 @@ class NationalRailCard extends LitElement {
               <div class="nr-train-board">
                 ${this.renderRows()}
               </div>
-              <div class="nr-schedule">
+              <div class="nr-schedule hide">
+                <div class="nr-close-btn" @click="${this._handleCloseClick}">Close</div>
                 ${this.renderSchedule()}
               </div>
             </div>
@@ -269,19 +299,56 @@ class NationalRailCard extends LitElement {
 
   }
 
+  _handleCloseClick(e) {
+
+    e.stopPropagation();
+    let components = e.composedPath();
+    let targetElement = components[0];
+    let boardElement = targetElement.closest(".card-content");
+    let trainBoardElement = boardElement.querySelector(".nr-train-board");
+    let scheduleElement = boardElement.querySelector(".nr-schedule");
+    let scheduleRowElements = scheduleElement.querySelectorAll(".nr-train-schedule");
+
+    trainBoardElement.classList.remove("hide");
+    scheduleElement.classList.add("hide");
+
+    for (let i = 0; i < scheduleRowElements.length; i++){
+      if (!scheduleRowElements[i].classList.contains("hide")) {
+        scheduleRowElements[i].classList.add("hide");
+      }
+    }
+  }
+
   _handleRowClick(e) {
-    let component = e.composedPath()
+
+    e.stopPropagation();
+
+    let components = e.composedPath();
+    let targetElement = components[0];
+    let trainBoardElement = targetElement.closest(".nr-train-board");
+    let boardElement = trainBoardElement.closest(".card-content");
+    let scheduleElement = boardElement.querySelector(".nr-schedule");
+
+    let trainBoardRow = DOMTokenList;
+
+    if (targetElement.classList.contains("nr-table")) {
+      trainBoardRow = targetElement;
+    } else {
+      trainBoardRow = targetElement.closest(".nr-table");
+    }
+
+    let rowId = trainBoardRow.getAttribute("data-rowId");
+
+    trainBoardElement.classList.add("hide");
+    scheduleElement.classList.remove("hide");
+    scheduleElement.querySelector(".nr-train-schedule-"+rowId).classList.remove("hide")
 
   }
 
   renderSchedule() {
 
-    // console.log(this.hass)
-
     let rows = [];
     let trains = this.stateAttr.dests[this._config.station][(this._config.arr_nDep ? "Arrival" : "Departure")].trains
-
-    // console.log(trains)
 
     for (let i = 0; i < ((trains.length > this._config.numRows)?this._config.numRows:trains.length); i++){
       rows.push(this.renderScheduleRows(trains[i],i));
@@ -293,8 +360,6 @@ class NationalRailCard extends LitElement {
   renderScheduleRows(train, i) {
 
     let trainStation = [];
-
-    // console.log(train);
 
     let position = -0.5;
     let arrCount = 0;
@@ -329,7 +394,7 @@ class NationalRailCard extends LitElement {
     let trainProgressCancelled = (100 / trainStation.length) * ((positionCancelled != 0) ? positionCancelled + 1 : 0.5);
 
     return html`
-      <div class="nr-train-schedule nr-train-schedule-${i}">
+      <div class="nr-train-schedule nr-train-schedule-${i} hide">
         <!-- <ha-icon icon="mdi:close"></ha-icon> -->
         <div class="nr-train-bar">
           <!--<div class="nr-train-bar-progress-cancelled" style="height:${trainProgressCancelled}%"></div>-->
@@ -347,8 +412,6 @@ class NationalRailCard extends LitElement {
     let rows = [];
     let trains = this.stateAttr.dests[this._config.station][(this._config.arr_nDep ? "Arrival" : "Departure")].trains
 
-    // console.log(trains)
-
     for (let i = 0; i < ((trains.length > this._config.numRows)?this._config.numRows:trains.length); i++){
 
       rows.push(this.createRow(this._config.arr_nDep,trains[i],i));
@@ -359,15 +422,13 @@ class NationalRailCard extends LitElement {
     return html`${rows}`;
   }
 
-  createRow(arr_nDep, rowInfo, i) {
-
-    // console.log(rowInfo)
+  createRow(arr_nDep, rowInfo, rowId) {
 
     let plat = html`
-      <tr>
-        <td class="nr-label">${this._ll("platform")}: <td>
-        <td class="nr-plat">${(rowInfo.platform?rowInfo.platform:"N/A")}<td>
-      </tr>
+      <div class="nr-table-row">
+        <div class="nr-table-cell nr-label">${this._ll("platform")}: </div>
+        <div class="nr-table-cell nr-plat">${(rowInfo.platform?rowInfo.platform:"N/A")}</div>
+      </div>
     `;
     let platBefore = html``;
     let platAfter = html``;
@@ -383,30 +444,30 @@ class NationalRailCard extends LitElement {
       arrivalTime = this.getTime(rowInfo.otherEnd.st, rowInfo.otherEnd.et);
     }
     return html`
-      <table data-rowId="${i}" @click="${this._handleRowClick}">
-        <tr>
-          <td class="nr-label">${this._ll("origin")}: <td>
-          <td class="nr-orig">${rowInfo.origin}<td>
-        <tr>
-        <tr>
-          <td class="nr-label">${this._ll("destination")}: <td>
-          <td class="nr-dest">${rowInfo.destination}<td>
-        </tr>
-        <tr>
-          <td class="nr-label">${this._ll("departure")}: <td>
-          <td class="nr-depart">${departTime}<td>
-        </tr>
+      <div class="nr-table" data-rowId="${rowId}" @click="${this._handleRowClick}">
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("origin")}: </div>
+          <div class="nr-table-cell nr-orig">${rowInfo.origin}</div>
+        </div>
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("destination")}: </div>
+          <div class="nr-table-cell nr-dest">${rowInfo.destination}</div>
+        </div>
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("departure")}: </div>
+          <div class="nr-table-cell nr-depart">${departTime}</div>
+        </div>
         ${platBefore}
-        <tr>
-          <td class="nr-label">${this._ll("arrival")}: <td>
-          <td class="nr-ariv">${arrivalTime}<td>
-        </tr>
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("arrival")}: </div>
+          <div class="nr-table-cell nr-ariv">${arrivalTime}</div>
+        </div>
         ${platAfter}
-        <tr>
-          <td class="nr-label">${this._ll("operator")}: <td>
-          <td class="nr-oper">${rowInfo.operator}<td>
-        </tr>
-      </table>
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("operator")}: </div>
+          <div class="nr-table-cell nr-oper">${rowInfo.operator}</div>
+        </div>
+      </div>
     `;
   }
 
@@ -419,9 +480,6 @@ class NationalRailCard extends LitElement {
 
     const scheduled = new Date(Date.parse(scheduled_in));
     const expected = new Date(Date.parse(expected_in));
-
-    // console.log(scheduled)
-    // console.log(expected)
 
     if (isNaN(scheduled)) {
       if (scheduled_in == "cancelled") {
@@ -493,9 +551,6 @@ class NationalRailCardEditor extends LitElement {
 
   setConfig(config) {
     this._config = config;
-
-    // console.log(config);
-    // console.log(this._config);
   }
 
   _valueChanged(ev) {
@@ -530,8 +585,6 @@ class NationalRailCardEditor extends LitElement {
   }
 
   render() {
-    // console.log(this._config);
-
     if (!this.hass || !this._config) {
       return html``;
     }
@@ -539,8 +592,6 @@ class NationalRailCardEditor extends LitElement {
     this.lang = this.hass.selectedLanguage || this.hass.language;
 
     let stations = [];
-
-    // console.log(this._config.entity)
 
     if (Object.keys(this.hass.states).includes(this._config.entity)) {
       this.entityObj = this.hass.states[this._config.entity];
@@ -550,8 +601,6 @@ class NationalRailCardEditor extends LitElement {
 
         if (Object.keys(this.stateAttr).includes("dests")) {
 
-          // console.log(this.stateAttr)
-
           for (const [crs, station] of Object.entries(this.stateAttr["dests"])) {
             stations.push({
               label: station["displayName"],
@@ -560,15 +609,6 @@ class NationalRailCardEditor extends LitElement {
           }
         }
       }
-
-      // console.log(stations)
-
-      // Array.foreach(this.stateAttr["dests"], function (station, crs) {
-      //   stations.push({
-      //     label: station["displayName"],
-      //     value: crs
-      //   })
-      // });
     }
 
     const schema = [
