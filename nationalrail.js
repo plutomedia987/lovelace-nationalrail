@@ -66,7 +66,7 @@ class NationalRailCard extends LitElement {
     "trainWidth": 25,
     "trainHeight": 14,
     "ystart": 2,
-    "cabWidth": 5
+    "cabWidth": 8
   });
 
   static get properties() {
@@ -265,17 +265,22 @@ class NationalRailCard extends LitElement {
         font-style: italic;
       }
 
-      .train-canvas{
-        height: 30px;
+      .nr-train-canvas{
+        height: 16px;
         align-self: center;
+        margin-top: 5px;
       }
 
-      .train-canvas path{
+      .nr-train-canvas path{
         stroke: var(--primary-text-color);
-        fill: none;
+        /*fill: none;*/
       }
 
-      .train-canvas text{
+      .nr-train-cab{
+        fill: var(--primary-text-color);
+      }
+
+      .nr-train-canvas text{
         fill: var(--primary-text-color);
       }
 
@@ -464,7 +469,7 @@ class NationalRailCard extends LitElement {
   }
 
   firstUpdated(changedProperties) {
-    let canvases = this.shadowRoot.querySelectorAll(".train-canvas");
+    let canvases = this.shadowRoot.querySelectorAll(".nr-train-canvas");
 
     canvases.forEach(x => {
       console.log(x.getBBox())
@@ -481,7 +486,7 @@ class NationalRailCard extends LitElement {
     let cabWidth = this.trainSize.cabWidth;
 
     trainElements.push(svg`
-      <path d="M${start+cabWidth} ${y} V${y+trainHeight} H${start} L${start+cabWidth} ${y}" />
+      <path d="M${start+cabWidth} ${y} V${y+trainHeight} H${start} L${start+cabWidth} ${y}" class="nr-train-cab" />
     `);
 
     start = start + cabWidth;
@@ -525,7 +530,7 @@ class NationalRailCard extends LitElement {
     let canvas = html``;
     if (rowInfo["length"] !== null && rowInfo["length"] > 0) {
       canvas = html`
-        <svg class="train-canvas" xmlns="http://www.w3.org/2000/svg" width="${this.trainSize.cabWidth + this.trainSize.xstart + (this.trainSize.trainWidth * rowInfo["length"]) + 1}">
+        <svg class="nr-train-canvas" xmlns="http://www.w3.org/2000/svg" width="${this.trainSize.cabWidth + this.trainSize.xstart + (this.trainSize.trainWidth * rowInfo["length"]) + 1}">
           ${this.drawTrain(rowInfo["length"])}
         </svg>
       `;
