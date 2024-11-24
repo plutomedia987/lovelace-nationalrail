@@ -275,6 +275,10 @@ class NationalRailCard extends LitElement {
         fill: none;
       }
 
+      .train-canvas text{
+        fill: var(--primary-text-color);
+      }
+
       .nr-train-board{
         display: flex;
         flex-direction: column;
