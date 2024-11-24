@@ -2,6 +2,7 @@ import {
   LitElement,
   html,
   css,
+  svg,
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
 const locale = {
@@ -59,6 +60,14 @@ function hasConfigOrEntityChanged(element, changedProps) {
 }
 
 class NationalRailCard extends LitElement {
+
+  trainSize = new Object({
+    "xstart": 2,
+    "trainWidth": 25,
+    "trainHeight": 14,
+    "ystart": 2,
+    "cabWidth": 5
+  });
 
   static get properties() {
     return {
@@ -230,12 +239,12 @@ class NationalRailCard extends LitElement {
 
       .nr-table-cell{
         display: table-cell;
-        padding-left: 0.2vw;
-        padding-right: 0.2vw;
+        padding-left: 2px;
+        padding-right: 2px;
       }
 
-      .hide{
-        display: none;
+      .nr-table-cell-train{
+        column-span: 2;
       }
 
       .nr-close-btn{
@@ -254,6 +263,25 @@ class NationalRailCard extends LitElement {
 
       .nr-schedule-time{
         font-style: italic;
+      }
+
+      .train-canvas{
+        height: 30px;
+        align-self: center;
+      }
+
+      .train-canvas path{
+        stroke: var(--primary-text-color);
+        fill: none;
+      }
+
+      .nr-train-board{
+        display: flex;
+        flex-direction: column;
+      }
+
+      .hide{
+        display: none;
       }
     `;
   }
@@ -394,7 +422,6 @@ class NationalRailCard extends LitElement {
       let tval = x.et;
       if (x.et === null) {
         tval = x.at;
-        console.log(x)
       }
 
       trainStation.push(html`
@@ -432,6 +459,41 @@ class NationalRailCard extends LitElement {
     `;
   }
 
+  firstUpdated(changedProperties) {
+    let canvases = this.shadowRoot.querySelectorAll(".train-canvas");
+
+    canvases.forEach(x => {
+      console.log(x.getBBox())
+    });
+  }
+
+  drawTrain(length) {
+
+    let trainElements = [];
+    let start = this.trainSize.xstart;
+    let trainWidth = this.trainSize.trainWidth;
+    let trainHeight = this.trainSize.trainHeight;
+    let y = this.trainSize.ystart;
+    let cabWidth = this.trainSize.cabWidth;
+
+    trainElements.push(svg`
+      <path d="M${start+cabWidth} ${y} V${y+trainHeight} H${start} L${start+cabWidth} ${y}" />
+    `);
+
+    start = start + cabWidth;
+
+    for (let i = 0; i < length; i++) {
+      trainElements.push(svg`
+        <path d="M${start} ${y} H${start + trainWidth} V${y + trainHeight} H${start} V${y}" />
+        <text x="${start + trainWidth/2}" y="${y + trainHeight/2 + 0.5}" dominant-baseline="middle" text-anchor="middle">${i}</text>
+      `)
+
+      start = start + trainWidth;
+    }
+
+    return trainElements;
+  }
+
   renderRows() {
 
     let rows = [];
@@ -452,9 +514,19 @@ class NationalRailCard extends LitElement {
     let plat = html`
       <div class="nr-table-row">
         <div class="nr-table-cell nr-label">${this._ll("platform")}: </div>
-        <div class="nr-table-cell nr-plat">${(rowInfo.platform?rowInfo.platform:"N/A")}</div>
+        <div class="nr-table-cell nr-plat">${(rowInfo.platform ? rowInfo.platform : "N/A")}</div>
       </div>
     `;
+
+    let canvas = html``;
+    if (rowInfo["length"] !== null && rowInfo["length"] > 0) {
+      canvas = html`
+        <svg class="train-canvas" xmlns="http://www.w3.org/2000/svg" width="${this.trainSize.cabWidth + this.trainSize.xstart + (this.trainSize.trainWidth * rowInfo["length"]) + 1}">
+          ${this.drawTrain(rowInfo["length"])}
+        </svg>
+      `;
+    }
+
     let platBefore = html``;
     let platAfter = html``;
     let departTime = html``;
@@ -493,6 +565,7 @@ class NationalRailCard extends LitElement {
           <div class="nr-table-cell nr-oper">${rowInfo.operator}</div>
         </div>
       </div>
+      ${canvas}
     `;
   }
 
