@@ -436,7 +436,7 @@ class NationalRailCard extends LitElement {
       trainStation.push(html`
         <div class="nr-train-station-name">
           <span class="nr-schedule-time ${(!!tval && tval == "Cancelled") ? "nr-override-time" : ""}">
-            ${this.getTime(x.st,tval)}
+            ${this.getTime(x.st,tval,false)}
           </span>
           <span class="${(!!x.et && x.et == "Cancelled") ? "nr-override-time" : ""}">
             ${x.locationName}
@@ -583,18 +583,20 @@ class NationalRailCard extends LitElement {
     return i;
   }
 
-  getTime(scheduled_in, expected_in) {
+  getTime(scheduled_in, expected_in, return_cancelled=true) {
 
     const scheduled = new Date(Date.parse(scheduled_in));
     const expected = new Date(Date.parse(expected_in));
 
     if (isNaN(scheduled)) {
       if (scheduled_in == "cancelled") {
-        return html`
-          <span class="nr-cancelled-colour">
-            ${this._ll("cancelled")}
-          </span>
-        `;
+        if (return_cancelled) {
+          return html`
+            <span class="nr-cancelled-colour">
+              ${this._ll("cancelled")}
+            </span>
+          `;
+        }
       } else {
         return html`
           <span class="nr-other-colour">
@@ -619,11 +621,13 @@ class NationalRailCard extends LitElement {
           `);
         } else {
           if (expected_in == "Cancelled") {
-            elements.push(html`
-              <span class="nr-cancelled-colour">
-                ${this._ll("cancelled")}
-              </span>
-            `);
+            if (return_cancelled) {
+              elements.push(html`
+                <span class="nr-cancelled-colour">
+                  ${this._ll("cancelled")}
+                </span>
+              `);
+            }
           } else {
             elements.push(html`
               <span class="nr-other-colour">
