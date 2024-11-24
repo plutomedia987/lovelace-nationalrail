@@ -201,12 +201,22 @@ class NationalRailCard extends LitElement {
 
       .nr-train-bar-progress{
         background-color: green;
-        border-radius: 50vh
+        border-radius: 50vh;
+        display: flex;
       }
 
       .nr-train-bar-progress-cancelled{
         background-color: red;
-        border-radius: 50vh
+        border-radius: 50vh;
+      }
+
+      .nr-train-bar-progress-circle{
+        flex: 1;
+        border: 1px solid;
+        height: 2.5vh;
+        border-radius: 50vh;
+        align-self: flex-end;
+        background-color: darkgreen;
       }
 
       .nr-table {
@@ -240,6 +250,10 @@ class NationalRailCard extends LitElement {
       .nr-close-btn:hover{
         color: var(--secondary-text-color);
         border-color: var(--secondary-text-color);
+      }
+
+      .nr-schedule-time{
+        font-style: italic;
       }
     `;
   }
@@ -377,8 +391,17 @@ class NationalRailCard extends LitElement {
 
       arrCount++;
 
+      let tval = x.et;
+      if (x.et === null) {
+        tval = x.at;
+        console.log(x)
+      }
+
       trainStation.push(html`
         <div class="nr-train-station-name">
+          <span class="nr-schedule-time ${(!!tval && tval == "Cancelled") ? "nr-override-time" : ""}">
+            ${this.getTime(x.st,tval)}
+          </span>
           <span class="${(!!x.et && x.et == "Cancelled") ? "nr-override-time" : ""}">
             ${x.locationName}
           </span>
@@ -398,7 +421,9 @@ class NationalRailCard extends LitElement {
         <!-- <ha-icon icon="mdi:close"></ha-icon> -->
         <div class="nr-train-bar">
           <!--<div class="nr-train-bar-progress-cancelled" style="height:${trainProgressCancelled}%"></div>-->
-          <div class="nr-train-bar-progress" style="height:${trainProgress}%"></div>
+          <div class="nr-train-bar-progress" style="height:${trainProgress}%">
+            <div class="nr-train-bar-progress-circle"></div>
+          </div>
         </div>
         <div class="nr-train-stations">
           ${trainStation}
