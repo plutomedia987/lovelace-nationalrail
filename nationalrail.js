@@ -5,31 +5,7 @@ import {
   svg,
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
-const locale = {
-  "en": {
-    "entity": "Entity",
-    "numRows": "Number of Rows",
-    "arr_nDep": "Arrival/Depature Board",
-    "arr_val": "Arrival",
-    "dept_val": "Departure",
-    "origin": "Origin",
-    "destination": "Destination",
-    "platform": "Platform",
-    "departure": "Departure",
-    "arrival": "Arrival",
-    "operator": "Operator",
-    "expected": "Expected",
-    "actual": "Actual",
-    "scheduled": "Scheduled",
-    "estimated": "Estimated",
-    "on_time": "On Time",
-    "cancelled": "Cancelled",
-    "arr_from": "Arrivals From",
-    "dept_to": "Departures To",
-    "station": "Station",
-    "duration": "Duration",
-  }
-}
+import { locale } from './locale.js'
 
 const fireEvent = (node, type, detail, options) => {
   options = options || {};
@@ -752,9 +728,17 @@ class NationalRailCardEditor extends LitElement {
     }
   };
 
+
   _ll(str) {
-    if (locale[this.lang] === undefined) return locale.en[str];
-    return locale[this.lang][str];
+    if (locale[this.lang] === undefined) {
+      if (Object.keys(locale.en).includes(str)) {
+        return locale.en[str];
+      } else {
+        return str;
+      }
+    } else {
+      return locale[this.lang][str];
+    }
   }
 
   render() {

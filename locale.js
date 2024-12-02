@@ -1,0 +1,25 @@
+export const locale = {
+  "en": {
+    "entity": "Entity",
+    "numRows": "Number of Rows",
+    "arr_nDep": "Arrival/Depature Board",
+    "arr_val": "Arrival",
+    "dept_val": "Departure",
+    "origin": "Origin",
+    "destination": "Destination",
+    "platform": "Platform",
+    "departure": "Departure",
+    "arrival": "Arrival",
+    "operator": "Operator",
+    "expected": "Expected",
+    "actual": "Actual",
+    "scheduled": "Scheduled",
+    "estimated": "Estimated",
+    "on_time": "On Time",
+    "cancelled": "Cancelled",
+    "arr_from": "Arrivals From",
+    "dept_to": "Departures To",
+    "station": "Station",
+    "duration": "Duration",
+  }
+}
