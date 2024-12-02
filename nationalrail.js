@@ -26,7 +26,8 @@ const locale = {
     "cancelled": "Cancelled",
     "arr_from": "Arrivals From",
     "dept_to": "Departures To",
-    "station" : "Station",
+    "station": "Station",
+    "duration": "Duration",
   }
 }
 
@@ -436,7 +437,7 @@ class NationalRailCard extends LitElement {
       trainStation.push(html`
         <div class="nr-train-station-name">
           <span class="nr-schedule-time ${(!!tval && tval == "Cancelled") ? "nr-override-time" : ""}">
-            ${this.getTime(x.st,tval,false)}
+            ${this.getTime(x.st,tval,false).elements}
           </span>
           <span class="${(!!x.et && x.et == "Cancelled") ? "nr-override-time" : ""}">
             ${x.locationName}
@@ -472,7 +473,7 @@ class NationalRailCard extends LitElement {
     let canvases = this.shadowRoot.querySelectorAll(".nr-train-canvas");
 
     canvases.forEach(x => {
-      console.log(x.getBBox())
+      // console.log(x.getBBox())
     });
   }
 
@@ -549,6 +550,22 @@ class NationalRailCard extends LitElement {
       departTime = this.getTime(rowInfo.scheduled, rowInfo.expected);
       arrivalTime = this.getTime(rowInfo.otherEnd.st, rowInfo.otherEnd.et);
     }
+
+    let trainDuration = html`<span class="nr-other-colour">N/A</span>`;
+    if ((departTime.timeRet instanceof Date) && (arrivalTime.timeRet instanceof Date)) {
+
+      let dur = (arrivalTime.timeRet - departTime.timeRet)/1000;
+      dur = Math.floor(dur / 60);
+
+      if (dur > 60) {
+        let hours = Math.floor(dur / 60);
+        let minutes = Math.floor(dur - (hours * 60))
+        trainDuration = hours + " Hour(s) " + minutes + " Minutes(s)"
+      } else {
+        trainDuration = dur + " Minute(s)";
+      }
+    }
+
     return html`
       <div class="nr-table" data-rowId="${rowId}" @click="${this._handleRowClick}">
         <div class="nr-table-row">
@@ -561,14 +578,18 @@ class NationalRailCard extends LitElement {
         </div>
         <div class="nr-table-row">
           <div class="nr-table-cell nr-label">${this._ll("departure")}: </div>
-          <div class="nr-table-cell nr-depart">${departTime}</div>
+          <div class="nr-table-cell nr-depart">${departTime.elements}</div>
         </div>
         ${platBefore}
         <div class="nr-table-row">
           <div class="nr-table-cell nr-label">${this._ll("arrival")}: </div>
-          <div class="nr-table-cell nr-ariv">${arrivalTime}</div>
+          <div class="nr-table-cell nr-ariv">${arrivalTime.elements}</div>
         </div>
         ${platAfter}
+        <div class="nr-table-row">
+          <div class="nr-table-cell nr-label">${this._ll("duration")}: </div>
+          <div class="nr-table-cell nr-ariv">${trainDuration}</div>
+        </div>
         <div class="nr-table-row">
           <div class="nr-table-cell nr-label">${this._ll("operator")}: </div>
           <div class="nr-table-cell nr-oper">${rowInfo.operator}</div>
@@ -583,28 +604,53 @@ class NationalRailCard extends LitElement {
     return i;
   }
 
+  // timeDiff(time1, time2) {
+
+  //   // const time1_date = new Date(Date.parse(time1));
+  //   // const time2_date = new Date(Date.parse(time2));
+
+  //   // console.log(time1_date);
+  //   // console.log(time2_date);
+
+  //   if ((time1 instanceof Date) && (time2 instanceof Date)) {
+  //     return time2 - time1;
+  //   }
+
+  //   return "Error";
+  // }
+
   getTime(scheduled_in, expected_in, return_cancelled=true) {
 
     const scheduled = new Date(Date.parse(scheduled_in));
     const expected = new Date(Date.parse(expected_in));
 
+    let timeRet = null;
+
     if (isNaN(scheduled)) {
       if (scheduled_in == "cancelled") {
         if (return_cancelled) {
-          return html`
-            <span class="nr-cancelled-colour">
-              ${this._ll("cancelled")}
-            </span>
-          `;
+          return {
+            "timeRet": null,
+            "elements": html`
+              <span class="nr-cancelled-colour">
+                ${this._ll("cancelled")}
+              </span>
+            `
+          }
         }
       } else {
-        return html`
-          <span class="nr-other-colour">
-            ${this._ll(scheduled_in)}
-          </span>
-        `;
+        return {
+          "timeRet": scheduled_in,
+          "elements": html`
+            <span class="nr-other-colour">
+              ${this._ll(scheduled_in)}
+            </span>
+          `
+        }
       }
     } else {
+      timeRet = null;
+
       if (expected_in != scheduled_in) {
         let elements = [];
         elements.push(html`
@@ -614,21 +660,34 @@ class NationalRailCard extends LitElement {
         `);
 
         if (!isNaN(expected)) {
+
+          timeRet = expected;
           elements.push(html`
             <span class="nr-expected-time">
               Expected: ${this.addZero(expected.getHours())}:${this.addZero(expected.getMinutes())}
             </span>
           `);
         } else {
+
+          timeRet = null;
+
           if (expected_in == "Cancelled") {
+
+            timeRet = null;
+
             if (return_cancelled) {
+
               elements.push(html`
                 <span class="nr-cancelled-colour">
                   ${this._ll("cancelled")}
                 </span>
               `);
+
             }
           } else {
+
+            timeRet = expected;
+
             elements.push(html`
               <span class="nr-other-colour">
                 ${this._ll(expected_in)}
@@ -637,14 +696,17 @@ class NationalRailCard extends LitElement {
           }
         }
 
-        return elements;
+        return { "elements": elements, "timeRet": timeRet };
 
       } else {
-        return html`
-          <span>
-            ${this.addZero(scheduled.getHours())}:${this.addZero(scheduled.getMinutes())}
-          </span>
-        `;
+        return {
+          "timeRet": scheduled,
+          "elements": html`
+            <span>
+              ${this.addZero(scheduled.getHours())}:${this.addZero(scheduled.getMinutes())}
+            </span>
+          `
+        }
       }
     }
   }
