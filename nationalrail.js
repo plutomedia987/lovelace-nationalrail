@@ -528,9 +528,10 @@ class NationalRailCard extends LitElement {
     }
 
     let trainDuration = html`<span class="nr-other-colour">N/A</span>`;
-    if ((departTime.timeRet instanceof Date) && (arrivalTime.timeRet instanceof Date)) {
+    if ((departTime.timeRet instanceof Date) && (!isNaN(departTime.timeRet)) && (arrivalTime.timeRet instanceof Date) && (!isNaN(arrivalTime.timeRet))) {
 
-      let dur = (arrivalTime.timeRet - departTime.timeRet)/1000;
+      let dur = (arrivalTime.timeRet - departTime.timeRet) / 1000;
+
       dur = Math.floor(dur / 60);
 
       if (dur > 60) {
