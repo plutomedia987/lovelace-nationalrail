@@ -222,6 +222,19 @@ class NationalRailCard extends LitElement {
         fill: green;
       }
 
+      .nr-tbps-train-loc{
+        fill: greenyellow;
+        stroke: greenyellow;
+        animation: nr-tbps-train-loc-blink 1.5s linear infinite;
+      }
+
+      @keyframes nr-tbps-train-loc-blink{
+        50% {
+          fill: mediumseagreen;
+          stroke: mediumseagreen;
+        }
+      }
+
       .nr-table {
         display: table;
         cursor: pointer;
@@ -295,6 +308,10 @@ class NationalRailCard extends LitElement {
     }
 
     // console.log(this.hass)
+    if (this.trainPosTimer !== null) {
+      clearInterval(this.trainPosTimer);
+      this.trainPosTimer = null;
+    }
 
     if (Object.keys(this.hass.states).includes(this._config.entity)) {
       this.entityObj = this.hass.states[this._config.entity];
@@ -344,6 +361,8 @@ class NationalRailCard extends LitElement {
 
   }
 
+  trainPosTimer = null;
+
   _handleCloseClick(e) {
 
     e.stopPropagation();
@@ -362,6 +381,9 @@ class NationalRailCard extends LitElement {
         scheduleRowElements[i].classList.add("hide");
       }
     }
+
+    clearInterval(this.trainPosTimer);
+    this.trainPosTimer = null;
   }
 
   _handleRowClick(e) {
@@ -396,6 +418,8 @@ class NationalRailCard extends LitElement {
     const bboxScheduleRowElement = scheduleRowElement.getBoundingClientRect();
     const bboxSVG = scheduleRowElement.querySelector(".nr-train-bar-progress-svg").getBoundingClientRect();
 
+    const trainLocSVG = scheduleRowElement.querySelector(".nr-tbps-train-loc");
+
     let bboxCircle = [];
 
     svgStations.forEach(function (val, i) {
@@ -416,6 +440,58 @@ class NationalRailCard extends LitElement {
       val.setAttribute("x", bboxSVG.width/2 - val.getBoundingClientRect().width/2)
     });
 
+    trainLocSVG.setAttribute("cy", 50);
+    trainLocSVG.setAttribute("cx", bboxSVG.width / 2);
+    trainLocSVG.setAttribute("r", bboxSVG.width * 0.35);
+
+    this.trainPosTimerCallback(trainLocSVG, svgStations, stationName, svgConnections);
+    this.trainPosTimer = setInterval(this.trainPosTimerCallback, 1000 * 10, trainLocSVG, svgStations, stationName, svgConnections);
+  }
+
+  trainPosTimerCallback(trainLocSVG, svgStations, stationName, svgConnections) {
+
+    const nowTime = Date.now();
+    let firstStation = 0;
+    let secondStation = 0;
+
+    // Find the train location
+    for (let i = 0; i < stationName.length - 1; i++) {
+      if (stationName[i].dataset.ts < nowTime) {
+        firstStation = i;
+        secondStation = i + 1;
+      }
+    };
+
+    if ((parseInt(stationName[firstStation].dataset.ts) == 0) || (parseInt(stationName[secondStation].dataset.ts) == 0)) {
+      return;
+    }
+
+    // Update station fills
+    svgStations.forEach(function (x, i) {
+      if (!x.classList.contains("nr-tbps-station-past")) {
+        if (nowTime >= parseInt(stationName[i].dataset.ts)) {
+          x.classList.add("nr-tbps-station-past");
+        }
+      }
+    });
+
+    // Update connection fills
+    svgConnections.forEach(function (x, i) {
+      if (!x.classList.contains("nr-tbps-station-past")) {
+        if (nowTime >= (parseInt(stationName[i].dataset.ts) + (1000*20))) {
+          x.classList.add("nr-tbps-station-past");
+        }
+      }
+    });
+
+    const nowTimeOffset = nowTime - stationName[firstStation].dataset.ts;
+
+    const distanceBetween = parseInt(svgStations[secondStation].getAttribute("cy")) - parseInt(svgStations[firstStation].getAttribute("cy"));
+    const timeBetween = parseInt(stationName[secondStation].dataset.ts) - parseInt(stationName[firstStation].dataset.ts);
+
+    const mult = distanceBetween / timeBetween;
+
+    trainLocSVG.setAttribute("cy", parseInt(svgStations[firstStation].getAttribute("cy")) + (nowTimeOffset * mult));
   }
 
   renderSchedule() {
@@ -458,8 +534,13 @@ class NationalRailCard extends LitElement {
 
       let timeRes = this.getTime(x.st, tval, false);
 
+      let timestamp = 0;
+      if ((timeRes.timeRet instanceof Date) && (!isNaN(timeRes.timeRet))) {
+        timestamp = timeRes.timeRet.getTime();
+      }
+
       trainStation.push(html`
-        <div class="nr-train-station-name">
+        <div class="nr-train-station-name" data-ts="${timestamp}">
           <span class="nr-schedule-time ${(!!tval && tval == "Cancelled") ? "nr-override-time" : ""}">
             ${timeRes.elements}
           </span>
@@ -509,17 +590,17 @@ class NationalRailCard extends LitElement {
       }
     },this);
 
-    let trainProgress = (100 / trainStation.length) * ((position != 0) ? position + 1 : 0.5);
-    let trainProgressCancelled = (100 / trainStation.length) * ((positionCancelled != 0) ? positionCancelled + 1 : 0.5);
+    stationsSVG.push(
+      svg`
+        <circle class="nr-tbps-train-loc"></circle>
+    `
+    );
 
 
     return html`
       <div class="nr-train-schedule nr-train-schedule-${i} hide">
         <!-- <ha-icon icon="mdi:close"></ha-icon> -->
         <div class="nr-train-bar">
-          <!-- <div class="nr-train-bar-progress" style="height:${trainProgress}%">
-            <div class="nr-train-bar-progress-circle"></div>
-          </div> -->
           <svg class="nr-train-bar-progress-svg" xmlns="http://www.w3.org/2000/svg">
             ${stationsSVG}
           </svg>
@@ -530,14 +611,6 @@ class NationalRailCard extends LitElement {
       </div>
     `;
   }
-
-  // firstUpdated(changedProperties) {
-  //   let canvases = this.shadowRoot.querySelectorAll(".nr-train-canvas");
-
-  //   canvases.forEach(x => {
-  //     // console.log(x.getBBox())
-  //   });
-  // }
 
   drawTrain(length) {
 
