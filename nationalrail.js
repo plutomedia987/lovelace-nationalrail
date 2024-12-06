@@ -173,8 +173,8 @@ class NationalRailCard extends LitElement {
 
       .nr-train-bar{
         width: 5%;
-        border: 1px solid var(--primary-text-color);
-        border-radius: 50vh
+        /*border: 1px solid var(--primary-text-color);
+        border-radius: 50vh*/
       }
 
       .nr-train-stations{
@@ -203,6 +203,23 @@ class NationalRailCard extends LitElement {
         border-radius: 50vh;
         align-self: flex-end;
         background-color: darkgreen;
+      }
+
+      .nr-train-bar-progress-svg{
+        width: 100%;
+        height: 100%;
+      }
+
+      .nr-tbps-station{
+        stroke: darkgreen;
+      }
+
+      .nr-tbps-station-connect{
+        stroke: darkgreen;
+      }
+
+      .nr-tbps-station-past{
+        fill: green;
       }
 
       .nr-table {
@@ -351,11 +368,11 @@ class NationalRailCard extends LitElement {
 
     e.stopPropagation();
 
-    let components = e.composedPath();
-    let targetElement = components[0];
-    let trainBoardElement = targetElement.closest(".nr-train-board");
-    let boardElement = trainBoardElement.closest(".card-content");
-    let scheduleElement = boardElement.querySelector(".nr-schedule");
+    const components = e.composedPath();
+    const targetElement = components[0];
+    const trainBoardElement = targetElement.closest(".nr-train-board");
+    const boardElement = trainBoardElement.closest(".card-content");
+    const scheduleElement = boardElement.querySelector(".nr-schedule");
 
     let trainBoardRow = DOMTokenList;
 
@@ -365,11 +382,39 @@ class NationalRailCard extends LitElement {
       trainBoardRow = targetElement.closest(".nr-table");
     }
 
-    let rowId = trainBoardRow.getAttribute("data-rowId");
+    const rowId = trainBoardRow.getAttribute("data-rowId");
 
     trainBoardElement.classList.add("hide");
     scheduleElement.classList.remove("hide");
-    scheduleElement.querySelector(".nr-train-schedule-"+rowId).classList.remove("hide")
+    const scheduleRowElement = scheduleElement.querySelector(".nr-train-schedule-" + rowId);
+    scheduleRowElement.classList.remove("hide");
+
+    const svgStations = scheduleRowElement.querySelectorAll(".nr-tbps-station");
+    const svgConnections = scheduleRowElement.querySelectorAll(".nr-tbps-station-connect");
+    const stationName = scheduleRowElement.querySelectorAll(".nr-train-station-name");
+
+    const bboxScheduleRowElement = scheduleRowElement.getBoundingClientRect();
+    const bboxSVG = scheduleRowElement.querySelector(".nr-train-bar-progress-svg").getBoundingClientRect();
+
+    let bboxCircle = [];
+
+    svgStations.forEach(function (val, i) {
+      let bbox = stationName[i].getBoundingClientRect();
+
+      val.setAttribute("r", bboxSVG.width * 0.4)
+      val.setAttribute("cy", bbox.y - bboxScheduleRowElement.y + (bbox.height / 2));
+      val.setAttribute("cx", bboxSVG.width / 2)
+
+      bboxCircle.push(val.getBoundingClientRect());
+    });
+
+    svgConnections.forEach(function (val, i) {
+      val.setAttribute("y", bboxCircle[i].bottom - bboxSVG.y);
+      val.setAttribute("height", (bboxCircle[i + 1].top - bboxSVG.y) - (bboxCircle[i].bottom - bboxSVG.y));
+      val.setAttribute("width", bboxSVG.width * 0.25)
+
+      val.setAttribute("x", bboxSVG.width/2 - val.getBoundingClientRect().width/2)
+    });
 
   }
 
@@ -388,12 +433,13 @@ class NationalRailCard extends LitElement {
   renderScheduleRows(train, i) {
 
     let trainStation = [];
+    let stationsSVG =[];
 
     let position = -0.5;
     let arrCount = 0;
     let positionCancelled = -0.5
 
-    train.callingPoints.forEach(x => {
+    train.callingPoints.forEach(function(x,i){
 
       if (!!x.at) {
         position = arrCount;
@@ -410,10 +456,12 @@ class NationalRailCard extends LitElement {
         tval = x.at;
       }
 
+      let timeRes = this.getTime(x.st, tval, false);
+
       trainStation.push(html`
         <div class="nr-train-station-name">
           <span class="nr-schedule-time ${(!!tval && tval == "Cancelled") ? "nr-override-time" : ""}">
-            ${this.getTime(x.st,tval,false).elements}
+            ${timeRes.elements}
           </span>
           <span class="${(!!x.et && x.et == "Cancelled") ? "nr-override-time" : ""}">
             ${x.locationName}
@@ -424,19 +472,57 @@ class NationalRailCard extends LitElement {
           </span>
         </div>
       `);
-    });
+
+      let nowDate = new Date();
+      nowDate.setMilliseconds(0);
+
+      let addStyle = "";
+      if ((timeRes.timeRet instanceof Date) && (!isNaN(timeRes.timeRet)) && (nowDate >= timeRes.timeRet)) {
+        addStyle = "nr-tbps-station-past";
+      }
+
+      stationsSVG.push(
+        svg`
+          <circle class="nr-tbps-station ${addStyle}"></circle>
+      `
+      );
+
+      if (i != train.callingPoints.length-1) {
+
+        let timeVal = timeRes.timeRet;
+
+        let addStyleConn = "";
+        if ((timeVal instanceof Date) && (!isNaN(timeVal))){
+
+          timeVal.setMinutes(timeVal.getMinutes() + 1)
+
+          if (nowDate >= timeVal) {
+            addStyleConn = "nr-tbps-station-past";
+          }
+        }
+
+        stationsSVG.push(
+          svg`
+            <rect class="nr-tbps-station-connect ${addStyleConn}"></rect>
+        `
+        );
+      }
+    },this);
 
     let trainProgress = (100 / trainStation.length) * ((position != 0) ? position + 1 : 0.5);
     let trainProgressCancelled = (100 / trainStation.length) * ((positionCancelled != 0) ? positionCancelled + 1 : 0.5);
+
 
     return html`
       <div class="nr-train-schedule nr-train-schedule-${i} hide">
         <!-- <ha-icon icon="mdi:close"></ha-icon> -->
         <div class="nr-train-bar">
-          <!--<div class="nr-train-bar-progress-cancelled" style="height:${trainProgressCancelled}%"></div>-->
-          <div class="nr-train-bar-progress" style="height:${trainProgress}%">
+          <!-- <div class="nr-train-bar-progress" style="height:${trainProgress}%">
             <div class="nr-train-bar-progress-circle"></div>
-          </div>
+          </div> -->
+          <svg class="nr-train-bar-progress-svg" xmlns="http://www.w3.org/2000/svg">
+            ${stationsSVG}
+          </svg>
         </div>
         <div class="nr-train-stations">
           ${trainStation}
@@ -445,13 +531,13 @@ class NationalRailCard extends LitElement {
     `;
   }
 
-  firstUpdated(changedProperties) {
-    let canvases = this.shadowRoot.querySelectorAll(".nr-train-canvas");
+  // firstUpdated(changedProperties) {
+  //   let canvases = this.shadowRoot.querySelectorAll(".nr-train-canvas");
 
-    canvases.forEach(x => {
-      // console.log(x.getBBox())
-    });
-  }
+  //   canvases.forEach(x => {
+  //     // console.log(x.getBBox())
+  //   });
+  // }
 
   drawTrain(length) {
 
