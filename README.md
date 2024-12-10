@@ -3,7 +3,7 @@ Custom card for https://github.com/plutomedia987/homeassistant_nationalrail/
 
 Clicking on the depature board shows the train location
 
-![image](https://github.com/user-attachments/assets/584d2369-2032-4c16-8276-994b53e5cda4)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=plutomedia987&repository=lovelace-nationalrail&category=Dashboard)
 
 
 # Installation
