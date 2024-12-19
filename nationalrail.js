@@ -317,27 +317,37 @@ class NationalRailCard extends LitElement {
       this.entityObj = this.hass.states[this._config.entity];
       if (Object.keys(this.entityObj).includes("attributes") && Object.keys(this.entityObj.attributes).includes("dests")) {
         this.stateAttr = this.entityObj["attributes"];
-
-        return html`
+        if (this.stateAttr.dests[this._config.station] !== undefined) {
+          return html`
+            <ha-card>
+              <h1 class="card-header">
+                ${this.stateAttr.station}
+                <span class="nr-header-direction">
+                  ${(this._config.arr_nDep ? this._ll("arr_from") : this._ll("dept_to"))}
+                </span>
+                ${this.stateAttr.dests[this._config.station].displayName}
+              </h1>
+              <div class="card-content">
+                <div class="nr-train-board">
+                  ${this.renderRows()}
+                </div>
+                <div class="nr-schedule hide">
+                  <div class="nr-close-btn" @click="${this._handleCloseClick}">Close</div>
+                  ${this.renderSchedule()}
+                </div>
+              </div>
+            </ha-card>
+          `;
+        } else {
+          return html`
           <ha-card>
-            <h1 class="card-header">
-              ${this.stateAttr.station}
-              <span class="nr-header-direction">
-                ${(this._config.arr_nDep ? this._ll("arr_from") : this._ll("dept_to"))}
-              </span>
-              ${this.stateAttr.dests[this._config.station].displayName}
-            </h1>
+            <h1 class="card-header"></h1>
             <div class="card-content">
-              <div class="nr-train-board">
-                ${this.renderRows()}
-              </div>
-              <div class="nr-schedule hide">
-                <div class="nr-close-btn" @click="${this._handleCloseClick}">Close</div>
-                ${this.renderSchedule()}
-              </div>
+              Select a destination
             </div>
           </ha-card>
         `;
+        }
       } else {
         return html`
           <ha-card>
@@ -959,7 +969,8 @@ class NationalRailCardEditor extends LitElement {
         required: true,
         selector: {
           select: {
-            options: stations
+            options: stations,
+            sort: true
           }
         }
       }
