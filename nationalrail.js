@@ -367,13 +367,13 @@ class NationalRailCard extends LitElement {
 
           // Find first valid station
           Object.keys(this.stateAttr.dests).some(function (key) {
-            if (Object.keys(this.stateAttr.dests[key]["Arrival"]).length !== 0) {
-              config.arr_nDep = true;
+            if (Object.keys(this.stateAttr.dests[key]["Departure"]).length !== 0) {
+              config.arr_nDep = false;
               config.station = key;
               return true;
             }
-            else if (Object.keys(this.stateAttr.dests[key]["Departure"]).length !== 0) {
-              config.arr_nDep = false;
+            else if (Object.keys(this.stateAttr.dests[key]["Arrival"]).length !== 0) {
+              config.arr_nDep = true;
               config.station = key;
               return true;
             }
@@ -639,18 +639,18 @@ class NationalRailCard extends LitElement {
     //   `)
     // },this);
 
-    if (Object.keys(this.stateAttr.dests[this._config.station]["Arrival"]).length !== 0) {
-      tab.push(html`
-        <div data-arr_ndep="1" class="nr-tab-item ${(arr_nDep == 1) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
-          ${this._ll("arr_val")}
-        </div>
-      `)
-    }
-
     if (Object.keys(this.stateAttr.dests[this._config.station]["Departure"]).length !== 0) {
       tab.push(html`
         <div data-arr_ndep="0" class="nr-tab-item ${(arr_nDep == 0) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
           ${this._ll("dept_val")}
+        </div>
+      `)
+    }
+
+    if (Object.keys(this.stateAttr.dests[this._config.station]["Arrival"]).length !== 0) {
+      tab.push(html`
+        <div data-arr_ndep="1" class="nr-tab-item ${(arr_nDep == 1) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+          ${this._ll("arr_val")}
         </div>
       `)
     }
