@@ -586,33 +586,51 @@ class NationalRailCard extends LitElement {
     let tab = []
 
     Object.keys(this.stateAttr.dests).forEach(key => {
-      tab.push(html`
-        <div data-station="${key}" class="nr-tab-item ${(key == destSel) ? 'nr-tab-active' : ''} tab-id-station" @click="${this._tabClick}">
-          ${this.stateAttr.dests[key].displayName}
-        </div>
-      `)
+      if (Object.keys(this.stateAttr.dests[key]["Arrival"]).length !== 0 && Object.keys(this.stateAttr.dests[key]["Departure"]).length !== 0) {
+        tab.push(html`
+            <div data-station="${key}" class="nr-tab-item ${(key == destSel) ? 'nr-tab-active' : ''} tab-id-station" @click="${this._tabClick}">
+              ${this.stateAttr.dests[key].displayName}
+            </div>
+          `)
+      }
     },this)
 
     return tab
   }
 
   renderArrDepTabs(arr_nDep) {
-    let arrdepStr = [this._ll("dept_val"), this._ll("arr_val")];
+    // let arrdepStr = [this._ll("dept_val"), this._ll("arr_val")];
 
     let tab = []
 
-    let index_comp = 0
-    if (arr_nDep == true) {
-      index_comp = 1
-    }
+    // let index_comp = 0
+    // if (arr_nDep == true) {
+    //   index_comp = 1
+    // }
 
-    arrdepStr.forEach(function (val, index) {
+    // arrdepStr.forEach(function (val, index) {
+    //   tab.push(html`
+    //     <div data-arr_ndep="${index}" class="nr-tab-item ${(index == index_comp) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+    //       ${val}
+    //     </div>
+    //   `)
+    // },this);
+
+    if (Object.keys(this.stateAttr.dests[this._config.station]["Arrival"]).length !== 0) {
       tab.push(html`
-        <div data-arr_ndep="${index}" class="nr-tab-item ${(index == index_comp) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
-          ${val}
+        <div data-arr_ndep="1" class="nr-tab-item ${(arr_nDep == 1) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+          ${this._ll("arr_val")}
         </div>
       `)
-    },this);
+    }
+
+    if (Object.keys(this.stateAttr.dests[this._config.station]["Departure"]).length !== 0) {
+      tab.push(html`
+        <div data-arr_ndep="0" class="nr-tab-item ${(arr_nDep == 0) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+          ${this._ll("dept_val")}
+        </div>
+      `)
+    }
 
     return tab
   }
@@ -1031,25 +1049,37 @@ class NationalRailCardEditor extends LitElement {
 
     this.lang = this.hass.selectedLanguage || this.hass.language;
 
-    let stations = [];
+    // let stations = [];
 
-    if (Object.keys(this.hass.states).includes(this._config.entity)) {
-      this.entityObj = this.hass.states[this._config.entity];
+    // if (Object.keys(this.hass.states).includes(this._config.entity)) {
+    //   this.entityObj = this.hass.states[this._config.entity];
 
-      if (Object.keys(this.entityObj).includes("attributes")) {
-        this.stateAttr = this.entityObj["attributes"];
+    //   if (Object.keys(this.entityObj).includes("attributes")) {
+    //     this.stateAttr = this.entityObj["attributes"];
 
-        if (Object.keys(this.stateAttr).includes("dests")) {
+    //     if (Object.keys(this.stateAttr).includes("dests")) {
 
-          for (const [crs, station] of Object.entries(this.stateAttr["dests"])) {
-            stations.push({
-              label: station["displayName"],
-              value: crs
-            })
-          }
-        }
-      }
-    }
+    //       for (const [crs, station] of Object.entries(this.stateAttr["dests"])) {
+    //         if (Object.keys(station["Arrival"]).length !== 0 && Object.keys(station["Departure"]).length !== 0) {
+    //           stations.push({
+    //             label: station["displayName"],
+    //             value: crs
+    //           })
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+
+    // let arrdeptSel = [];
+
+    // if (Object.keys(this.stateAttr.dests[this._config.station]["Departure"]).length !== 0) {
+    //   tab.push(html`
+    //     <div data-arr_ndep="0" class="nr-tab-item ${(arr_nDep == 0) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+    //       ${this._ll("dept_val")}
+    //     </div>
+    //   `)
+    // }
 
     const schema = [
       {
@@ -1062,31 +1092,31 @@ class NationalRailCardEditor extends LitElement {
         required: true,
         selector: { number: {mode:"box", min: 1, max: 10} },
       },
-      {
-        name: "arr_nDep",
-        required: true,
-        selector: {
-          select: {
-            options:[{
-              label: this._ll("arr_val"),
-              value: true
-            }, {
-              label: this._ll("dept_val"),
-              value: false
-            }]
-          }
-        }
-      },
-      {
-        name: "station",
-        required: true,
-        selector: {
-          select: {
-            options: stations,
-            sort: true
-          }
-        }
-      }
+      // {
+      //   name: "station",
+      //   required: true,
+      //   selector: {
+      //     select: {
+      //       options: stations,
+      //       sort: true
+      //     }
+      //   }
+      // },
+      // {
+      //   name: "arr_nDep",
+      //   required: true,
+      //   selector: {
+      //     select: {
+      //       options:[{
+      //         label: this._ll("arr_val"),
+      //         value: true
+      //       }, {
+      //         label: this._ll("dept_val"),
+      //         value: false
+      //       }]
+      //     }
+      //   }
+      // }
     ];
 
     const data = {
