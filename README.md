@@ -17,9 +17,7 @@ The card should be configurable in the GUI
 
 ```yaml
 type: custom:national-rail-card
-arr_nDep: false
 entity: sensor.train_schedule_lut_stp
-station: STP
 numRows: 5
 grid_options:
   columns: 12
