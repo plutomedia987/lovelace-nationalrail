@@ -17,9 +17,7 @@ The card should be configurable in the GUI
 
 ```yaml
 type: custom:national-rail-card
-arr_nDep: false
 entity: sensor.train_schedule_lut_stp
-station: STP
 numRows: 5
 grid_options:
   columns: 12
@@ -29,6 +27,5 @@ grid_options:
 | Parameter | Values | Description |
 |-----------|--------|-------------|
 | type      | custom:national-rail-card | The type of card to use. This must eb this value |
-| arr_nDep  | true<br>false   | Show arrivals to station from destination<br>Show departures from station to destination   |
 | entity    | sensor  | The national Rail sensor to pull the data from  |
 | numRows   | 1-10 | The number of rows to display |
