@@ -346,7 +346,14 @@ class NationalRailCard extends LitElement {
         border-top-right-radius: var(--ha-card-border-radius, 12px);
         padding: 5px;
         cursor: pointer;
-        align-content: center
+        align-content: center;
+        border-bottom: none;
+      }
+
+      .nr-tab-item-last{
+        border-bottom-width: var(--ha-card-border-width,1px);
+        border-bottom-style: solid;
+        border-bottom-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
       }
 
       .nr-tab-item:first-of-type{
@@ -359,6 +366,17 @@ class NationalRailCard extends LitElement {
 
       .nr-tab-active{
         background-color: var(--ha-card-background,var(--card-background-color,#fff));
+        border-bottom: none;
+      }
+
+      .nr-tab-title{
+        background-color: white;
+        border-width: var(--ha-card-border-width, 1px);
+        border-style: solid;
+        border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+        text-align: center;
+        border-top-left-radius: var(--ha-card-border-radius, 12px);
+        border-top-right-radius: var(--ha-card-border-radius, 12px);
         border-bottom: none;
       }
 
@@ -414,10 +432,8 @@ class NationalRailCard extends LitElement {
 
         return html`
           <ha-card>
+            <!--<div class="nr-tab-title">${this.stateAttr.description}</div>-->
             <div class="nr-tabs">
-              <!--<div class="nr-dest-icon">
-                <ha-icon icon="mdi:ray-end"></ha-icon>
-              </div>-->
               ${this.renderDestTabs(this._config.station)}
             </div>
             <div class="nr-tabs">
@@ -660,7 +676,7 @@ class NationalRailCard extends LitElement {
 
     if (Object.keys(this.stateAttr.dests[this._config.station]["Departure"]).length !== 0) {
       tab.push(html`
-        <div data-arr_ndep="0" class="nr-tab-item ${(arr_nDep == 0) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+        <div data-arr_ndep="0" class="nr-tab-item nr-tab-item-last ${(arr_nDep == 0) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
           ${this._ll("dept_val")}
         </div>
       `)
@@ -668,7 +684,7 @@ class NationalRailCard extends LitElement {
 
     if (Object.keys(this.stateAttr.dests[this._config.station]["Arrival"]).length !== 0) {
       tab.push(html`
-        <div data-arr_ndep="1" class="nr-tab-item ${(arr_nDep == 1) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
+        <div data-arr_ndep="1" class="nr-tab-item nr-tab-item-last ${(arr_nDep == 1) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
           ${this._ll("arr_val")}
         </div>
       `)
