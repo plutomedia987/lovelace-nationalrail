@@ -317,7 +317,24 @@ class NationalRailCard extends LitElement {
 
       .nr-tabs{
         display: flex;
+        /* padding-left: 24px; */
       }
+
+      /*
+      .nr-tabs::before{
+        content: mdi-ray-end;
+      }
+
+      .nr-dest-icon{
+        border-width: var(--ha-card-border-width,1px);
+        border-style: solid;
+        border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+        text-align: center;
+        border-top-left-radius: var(--ha-card-border-radius, 12px);
+        padding: 5px;
+        align-content: center
+      }
+        */
 
       .nr-tab-item{
         border-width: var(--ha-card-border-width,1px);
@@ -329,6 +346,7 @@ class NationalRailCard extends LitElement {
         border-top-right-radius: var(--ha-card-border-radius, 12px);
         padding: 5px;
         cursor: pointer;
+        align-content: center
       }
 
       .nr-tab-item:first-of-type{
@@ -342,6 +360,15 @@ class NationalRailCard extends LitElement {
       .nr-tab-active{
         background-color: var(--ha-card-background,var(--card-background-color,#fff));
         border-bottom: none;
+      }
+
+      .nr-message{
+        border: solid 1px #f5c6cb;
+        border-radius: var(--ha-card-border-radius, 12px);
+        padding: .75rem 1.25rem;
+        background-color: #f8d7da;
+        color: #721c24;
+        margin-bottom: 0.75rem;
       }
     `;
   }
@@ -362,7 +389,7 @@ class NationalRailCard extends LitElement {
       if (Object.keys(this.entityObj).includes("attributes") && Object.keys(this.entityObj.attributes).includes("dests")) {
         this.stateAttr = this.entityObj["attributes"];
         // if (this.stateAttr.dests[this._config.station] !== undefined) {
-        if (! Object.keys(this._config).includes("station") || ! Object.keys(this._config).includes("arr_nDep")) {
+        if (! Object.keys(this._config).includes("station") || ! Object.keys(this._config).includes("arr_nDep") || ! Object.keys(this.stateAttr.dests).includes(this._config["station"])) {
           let config = structuredClone(this._config)
 
           // Find first valid station
@@ -388,6 +415,9 @@ class NationalRailCard extends LitElement {
         return html`
           <ha-card>
             <div class="nr-tabs">
+              <!--<div class="nr-dest-icon">
+                <ha-icon icon="mdi:ray-end"></ha-icon>
+              </div>-->
               ${this.renderDestTabs(this._config.station)}
             </div>
             <div class="nr-tabs">
@@ -403,6 +433,9 @@ class NationalRailCard extends LitElement {
               </span>
             </h1>
             <div class="card-content">
+              <div class="nr-messages">
+                ${this.renderMessages(this._config.station)}
+              </div>
               <div class="nr-train-board">
                 ${this.renderRows(this._config.station, this._config.arr_nDep)}
               </div>
@@ -622,22 +655,8 @@ class NationalRailCard extends LitElement {
   }
 
   renderArrDepTabs(arr_nDep) {
-    // let arrdepStr = [this._ll("dept_val"), this._ll("arr_val")];
 
     let tab = []
-
-    // let index_comp = 0
-    // if (arr_nDep == true) {
-    //   index_comp = 1
-    // }
-
-    // arrdepStr.forEach(function (val, index) {
-    //   tab.push(html`
-    //     <div data-arr_ndep="${index}" class="nr-tab-item ${(index == index_comp) ? 'nr-tab-active' : ''} tab-id-arrdep" @click="${this._tabClick}">
-    //       ${val}
-    //     </div>
-    //   `)
-    // },this);
 
     if (Object.keys(this.stateAttr.dests[this._config.station]["Departure"]).length !== 0) {
       tab.push(html`
@@ -656,6 +675,18 @@ class NationalRailCard extends LitElement {
     }
 
     return tab
+  }
+
+  renderMessages(station) {
+    let messages = [];
+
+    Object.values(this.stateAttr.dests[station]["messages"]).forEach(function (val) {
+      messages.push(html`
+        <div class="nr-message">${val}</div>
+      `);
+    })
+
+    return html`${messages}`;
   }
 
   renderSchedule(station, arr_nDep) {
