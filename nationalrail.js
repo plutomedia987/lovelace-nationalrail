@@ -412,6 +412,7 @@ class NationalRailCard extends LitElement {
 
           // Find first valid station
           Object.keys(this.stateAttr.dests).some(function (key) {
+            // console.log(key)
             if (Object.keys(this.stateAttr.dests[key]["Departure"]).length !== 0) {
               config.arr_nDep = false;
               config.station = key;
@@ -430,38 +431,53 @@ class NationalRailCard extends LitElement {
           this.setConfig(config);
         }
 
-        return html`
-          <ha-card>
-            <!--<div class="nr-tab-title">${this.stateAttr.description}</div>-->
-            <div class="nr-tabs">
-              ${this.renderDestTabs(this._config.station)}
-            </div>
-            <div class="nr-tabs">
-              ${this.renderArrDepTabs(this._config.arr_nDep)}
-            </div>
-            <h1 class="card-header">
-              ${this.stateAttr.station}
-              <span class="nr-dest-title">
-                <span class="nr-header-direction">
-                  ${(this._config.arr_nDep ? this._ll("arr_from") : this._ll("dept_to"))}
+        // console.log(this._config)
+        // console.log(Object.keys(this._config).includes("station"))
+
+        if (!Object.keys(this._config).includes("station")) {
+          return html`
+            <ha-card>
+              <h1 class="card-header"></h1>
+              <div class="card-content">
+                No trains available at this time
+              </div>
+            </ha-card>
+          `;
+        } else {
+
+          return html`
+            <ha-card>
+              <!--<div class="nr-tab-title">${this.stateAttr.description}</div>-->
+              <div class="nr-tabs">
+                ${this.renderDestTabs(this._config.station)}
+              </div>
+              <div class="nr-tabs">
+                ${this.renderArrDepTabs(this._config.arr_nDep)}
+              </div>
+              <h1 class="card-header">
+                ${this.stateAttr.station}
+                <span class="nr-dest-title">
+                  <span class="nr-header-direction">
+                    ${(this._config.arr_nDep ? this._ll("arr_from") : this._ll("dept_to"))}
+                  </span>
+                  ${this.stateAttr.dests[this._config.station].displayName}
                 </span>
-                ${this.stateAttr.dests[this._config.station].displayName}
-              </span>
-            </h1>
-            <div class="card-content">
-              <div class="nr-messages">
-                ${this.renderMessages(this._config.station)}
+              </h1>
+              <div class="card-content">
+                <div class="nr-messages">
+                  ${this.renderMessages(this._config.station)}
+                </div>
+                <div class="nr-train-board">
+                  ${this.renderRows(this._config.station, this._config.arr_nDep)}
+                </div>
+                <div class="nr-schedule hide">
+                  <div class="nr-close-btn" @click="${this._handleCloseClick}">Close</div>
+                  ${this.renderSchedule(this._config.station, this._config.arr_nDep)}
+                </div>
               </div>
-              <div class="nr-train-board">
-                ${this.renderRows(this._config.station, this._config.arr_nDep)}
-              </div>
-              <div class="nr-schedule hide">
-                <div class="nr-close-btn" @click="${this._handleCloseClick}">Close</div>
-                ${this.renderSchedule(this._config.station, this._config.arr_nDep)}
-              </div>
-            </div>
-          </ha-card>
-        `;
+            </ha-card>
+          `;
+        }
         // } else {
         //   return html`
         //   <ha-card>
@@ -1192,6 +1208,9 @@ class NationalRailCardEditor extends LitElement {
     const data = {
       ...this._config,
     };
+
+    delete data["station"];
+    delete data["arr_nDep"];
 
     return html`<ha-form
       .hass=${this.hass}
