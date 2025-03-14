@@ -388,6 +388,10 @@ class NationalRailCard extends LitElement {
         color: #721c24;
         margin-bottom: 0.75rem;
       }
+
+      .nr-message a {
+        color: red;
+      }
     `;
   }
 
@@ -709,14 +713,40 @@ class NationalRailCard extends LitElement {
     return tab
   }
 
+  processMessage(nodes) {
+
+    let elements = [];
+
+    Object.values(nodes).forEach(function (node) {
+      if (node.nodeType == 3) {
+        elements.push(node.textContent);
+      } else if (node.nodeType == 1) {
+        if (node.localName == "a") {
+          elements.push(html`<a href="${node.href}">${node.textContent}</a>`)
+        } else if (node.localName == "p") {
+          this.processMessage(node.childNodes);
+        }
+      }
+    }, this)
+
+    return elements;
+  }
+
   renderMessages(station) {
     let messages = [];
+    const parser = new DOMParser();
 
     Object.values(this.stateAttr.dests[station]["messages"]).forEach(function (val) {
+
+      let msg = parser.parseFromString(val, 'text/html');
+      // let elements = [];
+
+      let elements = this.processMessage(msg.getElementsByTagName("body")[0].childNodes)
+
       messages.push(html`
-        <div class="nr-message">${val}</div>
+        <div class="nr-message">${elements}</div>
       `);
-    })
+    }, this)
 
     return html`${messages}`;
   }
