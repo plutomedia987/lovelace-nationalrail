@@ -3,7 +3,7 @@ import {
   html,
   css,
   svg,
-} from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
+} from "./lit-core.min.js"; //from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
 import { locale } from './locale.js'
 
