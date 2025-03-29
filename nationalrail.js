@@ -389,6 +389,15 @@ class NationalRailCard extends LitElement {
         margin-bottom: 0.75rem;
       }
 
+      .nr-message-row{
+        border: solid 1px #f5c6cb;
+        border-radius: var(--ha-card-border-radius, 12px);
+        padding: .75rem 1.25rem;
+        background-color: #f8d7da;
+        color: #721c24;
+        margin-top: 0.75rem;
+      }
+
       .nr-message a {
         color: red;
       }
@@ -748,6 +757,8 @@ class NationalRailCard extends LitElement {
       `);
     }, this)
 
+    messages.push(html`<hr />`);
+
     return html`${messages}`;
   }
 
@@ -913,6 +924,8 @@ class NationalRailCard extends LitElement {
 
   createRow(arr_nDep, rowInfo, rowId) {
 
+    console.log(rowInfo)
+
     let plat = html`
       <div class="nr-table-row">
         <div class="nr-table-cell nr-label">${this._ll("platform")}: </div>
@@ -959,6 +972,12 @@ class NationalRailCard extends LitElement {
       }
     }
 
+    let cancelledRow = [];
+    if (rowInfo.otherEnd.isCancelled === true) {
+      cancelledRow.push(html`
+        <div class="nr-message-row">${rowInfo.otherEnd.cancelReason}</div>
+    `)};
+
     return html`
       <div class="nr-table" data-rowId="${rowId}" @click="${this._handleRowClick}">
         <div class="nr-table-row">
@@ -989,6 +1008,7 @@ class NationalRailCard extends LitElement {
         </div>
       </div>
       ${canvas}
+      ${cancelledRow}
     `;
   }
 
