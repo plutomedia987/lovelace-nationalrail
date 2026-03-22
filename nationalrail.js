@@ -757,7 +757,9 @@ class NationalRailCard extends LitElement {
       `);
     }, this)
 
-    messages.push(html`<hr />`);
+    if (this.stateAttr.dests[station]["messages"].length > 0) {
+      messages.push(html`<hr />`);
+    }
 
     return html`${messages}`;
   }
@@ -924,7 +926,7 @@ class NationalRailCard extends LitElement {
 
   createRow(arr_nDep, rowInfo, rowId) {
 
-    console.log(rowInfo)
+    // console.log(rowInfo)
 
     let plat = html`
       <div class="nr-table-row">
